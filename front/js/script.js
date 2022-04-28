@@ -7,7 +7,7 @@ fetch("http://localhost:3000/api/products/")
     .then(function(value) {
         displayAllProducts(value);
     })
-    .catch(function(error) {
+    .catch(function() {
         console.log("Something went wrong with the request to get all the products from the API");
     });
 
@@ -51,7 +51,7 @@ function createProductCardElements(sofa) {
 
 function createProductCard(productCardElements) {
     let productCard = document.createElement("a");
-    productCard.setAttribute('href', "./product.html?id="+productCardElements.urlParam);
+    productCard.setAttribute('href', `./product.html?id=${productCardElements.urlParam}`);
 
     productCardElements.content.appendChild(productCardElements.picture);
     productCardElements.content.appendChild(productCardElements.name);
