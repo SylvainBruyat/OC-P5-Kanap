@@ -13,14 +13,10 @@ fetch("http://localhost:3000/api/products/")
 
 function displayAllProducts(products){
     for (let product of products) {
-        displayOneProduct(product);
+        let productCardElements = createProductCardElements(product);
+        let productCard = createProductCard(productCardElements);
+        addproductCardToPage(productCard);
     }
-};
-
-function displayOneProduct(sofa) {
-    let productCardElements = createProductCardElements(sofa);
-    let productCard = createProductCard(productCardElements);
-    addproductCardToPage(productCard);
 };
 
 function createProductCardElements(sofa) {
