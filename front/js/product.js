@@ -74,11 +74,11 @@ quantity.addEventListener("change", function(event) {
         displayValueRangeErrorMessage();
     }
     else {
-        removePreviousMessage();
+        removeErrorMessage();
     }
 })
 
-function removePreviousMessage() {
+function removeErrorMessage() {
     message.textContent = "";
 }
 
