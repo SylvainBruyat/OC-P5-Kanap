@@ -47,7 +47,7 @@ function createProductCardElements(sofa) {
 
 function createProductCard(productCardElements) {
     let productCard = document.createElement("a");
-    productCard.setAttribute('href', `./product.html?id=${productCardElements.urlParam}`);
+    productCard.setAttribute("href", `./product.html?id=${productCardElements.urlParam}`);
 
     productCardElements.content.appendChild(productCardElements.picture);
     productCardElements.content.appendChild(productCardElements.name);
