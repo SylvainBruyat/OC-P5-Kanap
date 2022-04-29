@@ -8,6 +8,9 @@ fetch(`http://localhost:3000/api/products/${productID}`)
     })
     .then(function(value) {
         addProductInfoToPage(value);
+    })
+    .catch(function() {
+        console.log("Something went wrong with the request to get the product info from the API");
     });
 
 function addProductInfoToPage(sofa) {
@@ -80,18 +83,18 @@ function removePreviousMessage() {
     }
 }
 
-function displayValueRangeErrorMessage() {
+function displayNotANumberErrorMessage() {
     let message = document.createElement("div");
-    message.textContent = "Veuillez entrer une quantité entre 1 et 100";
+    message.textContent = "Veuillez entrer un nombre entier";
 
     document
         .querySelector("div.item__content__settings__quantity")
         .appendChild(message);
 }
 
-function displayNotANumberErrorMessage() {
+function displayValueRangeErrorMessage() {
     let message = document.createElement("div");
-    message.textContent = "Veuillez entrer un nombre entier";
+    message.textContent = "Veuillez entrer une quantité entre 1 et 100";
 
     document
         .querySelector("div.item__content__settings__quantity")
