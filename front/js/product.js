@@ -105,7 +105,7 @@ function validateProductForm(product) {
         alert("Votre produit n'a pas pu être ajouté au panier car vous n'avez pas choisi de couleur");
         return false;
     }
-    else if (product.quantity === "" || product.quantity < 1 || product.quantity > 100 || parseInt(product.quantity) != parseFloat(product.quantity)) {
+    else if (!/^[0-9]+$/.test(product.quantity) || product.quantity < 1 || product.quantity > 100) {
         alert("Votre produit n'a pas pu être ajouté au panier. La quantité doit être un nombre entier entre 1 et 100.");
         return false;
     }
