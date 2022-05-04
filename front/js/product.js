@@ -67,7 +67,7 @@ document
 
 let quantity = document.getElementById("quantity");
 quantity.addEventListener("change", function(event) {
-    if (!/^-*[0-9]+$/.test(event.target.value)) {
+    if (!/^-*[0-9]+$/.test(event.target.value)) { //Modifier pour rejeter directement les entrées utilisateur invalides
         displayNotANumberErrorMessage();
     }
     else if ((event.target.value < 1) || (event.target.value > 100)) {
@@ -79,15 +79,15 @@ quantity.addEventListener("change", function(event) {
 });
 
 function removeErrorMessage() {
-    quantityErrorMessage.textContent = ""; //Action sur une variable hors scope. A améliorer ?
+    quantityErrorMessage.textContent = "";
 }
 
 function displayNotANumberErrorMessage() {
-    quantityErrorMessage.textContent = "Veuillez entrer un nombre entier"; //Action sur une variable hors scope. A améliorer ?
+    quantityErrorMessage.textContent = "Veuillez entrer un nombre entier";
 }
 
 function displayValueRangeErrorMessage() {
-    quantityErrorMessage.textContent = "Veuillez entrer une quantité entre 1 et 100"; //Action sur une variable hors scope. A améliorer ?
+    quantityErrorMessage.textContent = "Veuillez entrer une quantité entre 1 et 100";
 }
 
 let addToCartButton = document.getElementById("addToCart");
