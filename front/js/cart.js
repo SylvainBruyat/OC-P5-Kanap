@@ -1,9 +1,8 @@
-let cartItemsSection = document.getElementById("cart__items"); //Non-utilisé - A supprimer une fois le code terminé si toujours non-utilisé
-let cart = JSON.parse(localStorage.getItem("cart"));
-let totalQuantity = 0;
-let totalPrice = 0;
+let CART = JSON.parse(localStorage.getItem("cart"));
+let TOTAL_QUANTITY = 0;
+let TOTAL_PRICE = 0;
 
-for (let product of cart) {
+for (let product of CART) {
     addProductToCartPage(product);
 }
 
@@ -54,11 +53,13 @@ function addProductInfoToCartPage(productFromLocalStorage, productFromAPI) {
 function insertEventListeners() {
     let quantityFields = document.getElementsByClassName("itemQuantity");
     let deleteButtons = document.getElementsByClassName("deleteItem");
+
     for (let field of quantityFields) {
         field.addEventListener("change", function(event) {
-            productQuantityUpdate(event.target);
+            productQuantityUpdate(event.target);            
         });
     }
+
     for (let button of deleteButtons) {
         button.addEventListener("click", function(event) {
             removeProductFromBasket(event.target);
@@ -67,21 +68,63 @@ function insertEventListeners() {
 }
 
 function displayTotalQuantityAndPrice(quantity, price) {
-    totalQuantity += Number.parseInt(quantity, 10);
-    totalPrice += (price * quantity);
+    TOTAL_QUANTITY += Number.parseInt(quantity, 10);
+    TOTAL_PRICE += (price * quantity);
     document
         .getElementById("totalQuantity")
-        .textContent = totalQuantity;
+        .textContent = TOTAL_QUANTITY;
     document
         .getElementById("totalPrice")
-        .textContent = totalPrice;
+        .textContent = TOTAL_PRICE;
 }
 
 function productQuantityUpdate(modifiedQuantityField) {
+    let status = validateNewQuantity(modifiedQuantityField);
+    if (status.isQuantityValid === false) {
+        rejectNewQuantity(modifiedQuantityField);
+    }
+    else if (status.isQuantityInRange === false) {
+        //afficher message d'information dans le DOM sur la quantité ramenée entre 1 et 100;
+        let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
+        let deltaQuantity = quantityUpdate(modifiedProduct, modifiedQuantityField.value);
+        let productPrice = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
+        displayTotalQuantityAndPrice(deltaQuantity, productPrice);
+    }
+    else { //Code répété avec le else if. A refactoriser
+        let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
+        let deltaQuantity = quantityUpdate(modifiedProduct, modifiedQuantityField.value);
+        let productPrice = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
+        displayTotalQuantityAndPrice(deltaQuantity, productPrice);
+    }
+}
+
+function validateNewQuantity(modifiedQuantityField) {
+    if (!/^[0-9]+$/.test(modifiedQuantityField.value)) {
+        return {
+            isQuantityValid: false,
+            isQuantityInRange: false
+        }
+    }
+    else if ((modifiedQuantityField.value < 1) || (modifiedQuantityField.value > 100)) {
+        modifiedQuantityField.value = Math.max(1, Math.min(100, modifiedQuantityField.value));
+        return {
+            isQuantityValid: true,
+            isQuantityInRange: false
+        }
+    }
+    else {
+        return {
+            isQuantityValid: true,
+            isQuantityInRange: true
+        }
+    }
+}
+
+function rejectNewQuantity(modifiedQuantityField) {
     let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
-    let deltaQuantity = quantityUpdate(modifiedProduct, modifiedQuantityField.value);
-    let productPrice = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
-    displayTotalQuantityAndPrice(deltaQuantity, productPrice);
+    let productInCart = CART.find(p => (p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color));
+    modifiedQuantityField.value = productInCart.quantity;
+    //ajouter un message d'erreur dans le DOM
 }
 
 function findCorrespondingProduct(clickedElement) {
@@ -89,10 +132,10 @@ function findCorrespondingProduct(clickedElement) {
 }
 
 function quantityUpdate(modifiedProduct, newQuantity) {
-    let productInCart = cart.find(p => (p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color));
+    let productInCart = CART.find(p => (p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color));
     let deltaQuantity = newQuantity - productInCart.quantity;
     productInCart.quantity = newQuantity;
-    saveCart(cart);
+    saveCart(CART);
     return deltaQuantity;
 }
 
@@ -113,8 +156,8 @@ function findRemovedQuantityAndPrice(modifiedProduct) {
 }
 
 function deleteProduct(modifiedProduct) {
-    cart = cart.filter(p => !((p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color)));
-    saveCart(cart);
+    CART = CART.filter(p => !((p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color)));
+    saveCart(CART);
     removePageContent(modifiedProduct);
 }
 
