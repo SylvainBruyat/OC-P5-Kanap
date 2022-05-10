@@ -14,7 +14,9 @@ function addProductToCartPage(productFromLocalStorage) {
     })
     .then(function(productFromAPI) {
         addProductInfoToCartPage(productFromLocalStorage, productFromAPI);
-        insertEventListeners();
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        insertEventListeners(); //TODO Est appelé une fois par produit de la page donc crée de multiples event listeners. A corriger.
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         displayTotalQuantityAndPrice(productFromLocalStorage.quantity, productFromAPI.price);
     })
     .catch(function() {
@@ -53,18 +55,27 @@ function addProductInfoToCartPage(productFromLocalStorage, productFromAPI) {
 function insertEventListeners() {
     let quantityFields = document.getElementsByClassName("itemQuantity");
     let deleteButtons = document.getElementsByClassName("deleteItem");
-
+    let submitButton = document.getElementById("order");
+    
     for (let field of quantityFields) {
         field.addEventListener("change", function(event) {
+            event.stopImmediatePropagation(); //TODO Vérifier si toujours utile après que le problème de création d'event listener est corrigé
             productQuantityUpdate(event.target);            
         });
     }
 
     for (let button of deleteButtons) {
         button.addEventListener("click", function(event) {
+            event.stopImmediatePropagation(); //TODO Vérifier si toujours utile après que le problème de création d'event listener est corrigé
             removeProductFromBasket(event.target);
         })
     }
+
+    submitButton.addEventListener("click", function(event) {
+        event.stopImmediatePropagation(); //TODO Vérifier si toujours utile après que le problème de création d'event listener est corrigé
+        event.preventDefault();
+        sendOrder();
+    });
 }
 
 function displayTotalQuantityAndPrice(quantity, price) {
@@ -84,13 +95,13 @@ function productQuantityUpdate(modifiedQuantityField) {
         rejectNewQuantity(modifiedQuantityField);
     }
     else if (status.isQuantityInRange === false) {
-        //afficher message d'information dans le DOM sur la quantité ramenée entre 1 et 100;
+        //TODO Afficher message d'information dans le DOM sur la quantité ramenée entre 1 et 100;
         let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
         let deltaQuantity = quantityUpdate(modifiedProduct, modifiedQuantityField.value);
         let productPrice = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
         displayTotalQuantityAndPrice(deltaQuantity, productPrice);
     }
-    else { //Code répété avec le else if. A refactoriser
+    else { //TODO Code répété avec le else if. A refactoriser
         let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
         let deltaQuantity = quantityUpdate(modifiedProduct, modifiedQuantityField.value);
         let productPrice = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
@@ -124,7 +135,7 @@ function rejectNewQuantity(modifiedQuantityField) {
     let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
     let productInCart = CART.find(p => (p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color));
     modifiedQuantityField.value = productInCart.quantity;
-    //ajouter un message d'erreur dans le DOM
+    //TODO Ajouter un message d'erreur dans le DOM
 }
 
 function findCorrespondingProduct(clickedElement) {
@@ -168,4 +179,128 @@ function removePageContent(modifiedProduct) {
 
 function saveCart(cart) {
     localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+function sendOrder() {
+    let isFormValid = validateOrderForm();
+    if (isFormValid) {
+        let requestBody = createOrderData(CART);
+        postOrderRequest(requestBody);
+    }
+    
+}
+
+function validateOrderForm() { //TODO Fonction très longue. Voir pour la refactoriser
+    let firstName = document.getElementById("firstName").value;
+    let lastName = document.getElementById("lastName").value;
+    let address = document.getElementById("address").value;
+    let city = document.getElementById("city").value;
+    let email = document.getElementById("email").value;
+
+    let firstNameIsValid = true;
+    let lastNameIsValid = true;
+    let addressIsValid = true;
+    let cityIsValid = true;
+    let emailIsValid = true;
+
+    if(!/^[\p{L} -]+$/u.test(firstName)) {
+        document
+            .getElementById("firstNameErrorMsg")
+            .textContent = "Veuillez saisir un prénom uniquement composé de lettres, espaces et tirets";
+        firstNameIsValid = false;
+    }
+    else {
+        document
+            .getElementById("firstNameErrorMsg")
+            .textContent = "";
+    }
+
+    if(!/^[\p{L} -]+$/u.test(lastName)) {
+        document
+            .getElementById("lastNameErrorMsg")
+            .textContent = "Veuillez saisir un nom de famille uniquement composé de lettres, espaces et tirets";
+        lastNameIsValid = false;
+    }
+    else {
+        document
+            .getElementById("lastNameErrorMsg")
+            .textContent = "";
+    }
+
+    if(!/^[\p{L}\d ,.-]+$/u.test(address)) {
+        document
+            .getElementById("addressErrorMsg")
+            .textContent = "Veuillez saisir une adresse uniquement composée de chiffres, lettres, espaces, virgules, points et tirets";
+        addressIsValid = false;
+    }
+    else {
+        document
+            .getElementById("addressErrorMsg")
+            .textContent = "";
+    }
+
+    if(!/^[\p{L} -]+$/u.test(city)) {
+        document
+            .getElementById("cityErrorMsg")
+            .textContent = "Veuillez saisir un nom de ville uniquement composé de lettres, espaces et tirets";
+        cityIsValid = false;
+    }
+    else {
+        document
+            .getElementById("cityErrorMsg")
+            .textContent = "";
+    }
+
+    if(!/^[\w.-]*@[\w]*.[a-zA-Z]{2,}$/.test(email)) {
+        document
+            .getElementById("emailErrorMsg")
+            .textContent = "Veuillez saisir une adresse email valide sans caractères accentués (format : adresse._-@exemple.xyz)";
+        emailIsValid = false;
+    }
+    else {
+        document
+            .getElementById("emailErrorMsg")
+            .textContent = "";
+    }
+    return (firstNameIsValid && lastNameIsValid && addressIsValid && cityIsValid && emailIsValid);
+}
+
+function createOrderData(cart) {
+    let firstName = document.getElementById("firstName").value;
+    let lastName = document.getElementById("lastName").value;
+    let address = document.getElementById("address").value;
+    let city = document.getElementById("city").value;
+    let email = document.getElementById("email").value;
+    let contact = {
+        "firstName": firstName,
+        "lastName": lastName,
+        "address": address,
+        "city": city,
+        "email": email
+    }
+
+    let products = []; //Mieux d'utiliser une méthode .map() ?
+    for (let product of cart) {
+        products.push(product.id);
+    }
+
+    return {contact, products};
+}
+
+function postOrderRequest(requestBody) {
+    fetch("http://localhost:3000/api/products/order/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(requestBody),
+    })
+    .then(function(response) {
+        if (response.status == 201)
+            return response.json();
+    })
+    .then(function(data) {
+        window.location = `./confirmation.html?orderid=${data.orderId}`;
+    })
+    .catch(function() {
+        console.log("The order could not be processed by the API. Please verify the content of the POST request");
+    });
 }
