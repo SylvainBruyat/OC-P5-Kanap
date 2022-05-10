@@ -1,6 +1,6 @@
-let productID = new URL(document.URL).searchParams.get("id");
+const PRODUCT_ID = new URL(document.URL).searchParams.get("id");
 
-fetch(`http://localhost:3000/api/products/${productID}`)
+fetch(`http://localhost:3000/api/products/${PRODUCT_ID}`)
     .then(function(response) {
         if (response.ok) {
             return response.json();
@@ -60,34 +60,34 @@ function addProductColorsToPage(colors) {
     }
 }
 
-let quantityErrorMessage = document.createElement("div");
+let quantityWarningMessage = document.createElement("div");
+quantityWarningMessage.setAttribute("style", "color: darkorange;");
 document
         .querySelector("div.item__content__settings__quantity")
-        .appendChild(quantityErrorMessage);
+        .appendChild(quantityWarningMessage);
 
 let quantity = document.getElementById("quantity");
 quantity.addEventListener("change", function(event) {
-    if (!/^-*[0-9]+$/.test(event.target.value)) { //Modifier pour rejeter directement les entrées utilisateur invalides
-        displayNotANumberErrorMessage();
+    if (!/^-?[0-9]+$/.test(event.target.value)) { //Modifier pour rejeter directement les entrées utilisateur invalides
+        displayWarningMessage("Veuillez entrer un nombre entier");
     }
     else if ((event.target.value < 1) || (event.target.value > 100)) {
-        displayValueRangeErrorMessage();
+        displayWarningMessage("Veuillez entrer une quantité entre 1 et 100");
     }
     else {
-        removeErrorMessage();
+        removeWarningMessage();
     }
 });
 
-function removeErrorMessage() {
-    quantityErrorMessage.textContent = "";
+function displayWarningMessage(messageToDisplay) {
+    quantityWarningMessage.textContent = messageToDisplay;
+    setTimeout(function() {
+        removeWarningMessage();
+    }, 5000);
 }
 
-function displayNotANumberErrorMessage() {
-    quantityErrorMessage.textContent = "Veuillez entrer un nombre entier";
-}
-
-function displayValueRangeErrorMessage() {
-    quantityErrorMessage.textContent = "Veuillez entrer une quantité entre 1 et 100";
+function removeWarningMessage() {
+    quantityWarningMessage.textContent = "";
 }
 
 let addToCartButton = document.getElementById("addToCart");
@@ -97,16 +97,25 @@ addToCartButton.addEventListener("click", function(){
     if (formIsValid) {
         let cart = addProductToCart(productInfo);
         saveCart(cart);
+        displayConfirmationMessage(`Le canapé a été ajouté à votre panier en ${productInfo.quantity} exemplaire(s) couleur ${productInfo.color}.`);
     }
 });
 
+function readFormInfo() {
+    let id = PRODUCT_ID;
+    let color = document.getElementById("colors").value;
+    let quantity = document.getElementById("quantity").value;
+
+    return {id, color, quantity};
+}
+
 function validateProductForm(product) {
     if (product.color === "") {
-        alert("Votre produit n'a pas pu être ajouté au panier car vous n'avez pas choisi de couleur");
+        displayErrorMessage("Votre produit n'a pas pu être ajouté au panier car vous n'avez pas choisi de couleur");
         return false;
     }
     else if (!/^[0-9]+$/.test(product.quantity) || product.quantity < 1 || product.quantity > 100) {
-        alert("Votre produit n'a pas pu être ajouté au panier. La quantité doit être un nombre entier entre 1 et 100.");
+        displayErrorMessage("Votre produit n'a pas pu être ajouté au panier. La quantité doit être un nombre entier entre 1 et 100.");
         return false;
     }
     else {
@@ -114,18 +123,22 @@ function validateProductForm(product) {
     }
 }
 
-function readFormInfo() {
-    let id = productID;
-    let color = document.getElementById("colors").value;
-    let quantity = document.getElementById("quantity").value;
-
-    return {id, color, quantity};
+function displayErrorMessage(messageToDisplay) {
+    let container = document.querySelector(".item__content");
+    let errorMessage = document.createElement("div");
+    errorMessage.setAttribute("style", "margin-top: 15px; text-align: center; color: rgb(150, 0, 0);");
+    errorMessage.textContent = messageToDisplay;
+    container.appendChild(errorMessage);
+    setTimeout(function() {
+        container.removeChild(errorMessage);
+    },
+    5000);
 }
 
 function addProductToCart(product) {
     let cart = getCart();
-    let productAlreadyInCart = checkIfProductAlreadyInCart(product, cart);
-    if (productAlreadyInCart) {
+    let productIsAlreadyInCart = checkIfProductIsAlreadyInCart(product, cart);
+    if (productIsAlreadyInCart) {
         cart = updateProductQuantity(product, cart);
     }
     else {
@@ -145,7 +158,7 @@ function getCart() {
     }
 }
 
-function checkIfProductAlreadyInCart(product, cart) {
+function checkIfProductIsAlreadyInCart(product, cart) {
     for (let item of cart) {
         if (item.id === product.id && item.color === product.color) {
             return true;
@@ -157,7 +170,8 @@ function checkIfProductAlreadyInCart(product, cart) {
 function updateProductQuantity(product, cart) {
     for (let item of cart) {
         if (item.id === product.id && item.color === product.color) { /*** Code répété ! A refactoriser/améliorer ***/
-            let sum = parseInt(item.quantity) + parseInt(product.quantity);
+            let sum = Math.min(100, parseInt(item.quantity, 10) + parseInt(product.quantity, 10));
+            displayWarningMessage("La quantité totale de ce produit dans le panier a été limitée à 100.")
             item.quantity = sum.toString();
             return cart;
         }
@@ -166,4 +180,16 @@ function updateProductQuantity(product, cart) {
 
 function saveCart(cart) {
     localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+function displayConfirmationMessage(messageToDisplay) {
+    let container = document.querySelector(".item__content");
+    let confirmationMessage = document.createElement("div");
+    confirmationMessage.setAttribute("style", "margin-top: 15px; text-align: center; color: rgb(0, 120, 0);");
+    confirmationMessage.textContent = messageToDisplay;
+    container.appendChild(confirmationMessage);
+    setTimeout(function() {
+        container.removeChild(confirmationMessage);
+    },
+    5000);
 }
