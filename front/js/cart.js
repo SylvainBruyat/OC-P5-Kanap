@@ -203,10 +203,10 @@ function validateOrderForm() { //TODO Fonction très longue. Voir pour la refact
     let cityIsValid = true;
     let emailIsValid = true;
 
-    if(!/^[\p{L} -]+$/u.test(firstName)) {
+    if(!/^[\p{L}]{1}[\p{L} -]+$/u.test(firstName)) {
         document
             .getElementById("firstNameErrorMsg")
-            .textContent = "Veuillez saisir un prénom uniquement composé de lettres, espaces et tirets";
+            .textContent = "Veuillez saisir un prénom commençant par une lettre et uniquement composé de lettres, espaces et tirets";
         firstNameIsValid = false;
     }
     else {
@@ -215,10 +215,10 @@ function validateOrderForm() { //TODO Fonction très longue. Voir pour la refact
             .textContent = "";
     }
 
-    if(!/^[\p{L} -]+$/u.test(lastName)) {
+    if(!/^[\p{L}]{1}[\p{L} -]+$/u.test(lastName)) {
         document
             .getElementById("lastNameErrorMsg")
-            .textContent = "Veuillez saisir un nom de famille uniquement composé de lettres, espaces et tirets";
+            .textContent = "Veuillez saisir un nom de famille commençant par une lettre et uniquement composé de lettres, espaces et tirets";
         lastNameIsValid = false;
     }
     else {
@@ -227,10 +227,10 @@ function validateOrderForm() { //TODO Fonction très longue. Voir pour la refact
             .textContent = "";
     }
 
-    if(!/^[\p{L}\d ,.-]+$/u.test(address)) {
+    if(!/^[\p{L}\d]{1}[\p{L}\d ,.-]+$/u.test(address)) {
         document
             .getElementById("addressErrorMsg")
-            .textContent = "Veuillez saisir une adresse uniquement composée de chiffres, lettres, espaces, virgules, points et tirets";
+            .textContent = "Veuillez saisir une adresse commençant par un chiffre ou une lettre et uniquement composée de chiffres, lettres, espaces, virgules, points et tirets";
         addressIsValid = false;
     }
     else {
@@ -239,10 +239,10 @@ function validateOrderForm() { //TODO Fonction très longue. Voir pour la refact
             .textContent = "";
     }
 
-    if(!/^[\p{L} -]+$/u.test(city)) {
+    if(!/^[\p{L}]{1}[\p{L} -]+$/u.test(city)) {
         document
             .getElementById("cityErrorMsg")
-            .textContent = "Veuillez saisir un nom de ville uniquement composé de lettres, espaces et tirets";
+            .textContent = "Veuillez saisir un nom de ville commençant par une lettre et uniquement composé de lettres, espaces et tirets";
         cityIsValid = false;
     }
     else {
@@ -254,7 +254,7 @@ function validateOrderForm() { //TODO Fonction très longue. Voir pour la refact
     if(!/^[\w.-]*@[\w]*.[a-zA-Z]{2,}$/.test(email)) {
         document
             .getElementById("emailErrorMsg")
-            .textContent = "Veuillez saisir une adresse email valide sans caractères accentués (format : adresse._-@exemple.xyz)";
+            .textContent = "Veuillez saisir une adresse email valide sans caractères accentués (format : adresse.2_-@exemple.xyz)";
         emailIsValid = false;
     }
     else {
