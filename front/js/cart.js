@@ -2,8 +2,29 @@ let CART = JSON.parse(localStorage.getItem("cart"));
 let TOTAL_QUANTITY = 0;
 let TOTAL_PRICE = 0;
 
-for (let product of CART) {
-    addProductToCartPage(product);
+if (CART === null || CART.length === 0) {
+    displayEmptyCartMessage();
+}
+else {
+    for (let product of CART) {
+        addProductToCartPage(product);
+    }
+}
+
+function displayEmptyCartMessage() {
+    let container = document.getElementById("cartAndFormContainer");
+    let nextChild = document.querySelector(".cart");
+    let emptyCartMessage = document.createElement("div");
+    emptyCartMessage.innerHTML = `
+        <p style="text-align: center;">Votre panier est vide.</p>
+        <p style="text-align: center; margin-bottom: 40px;">
+            N'hésitez pas à consulter notre 
+            <a href="./index.html" style="color: white;" onMouseOver="this.style.fontWeight='bold'" onMouseOut="this.style.fontWeight='normal'">
+            page d'accueil</a>
+             pour voir tous nos produits.
+        </p>
+    `;
+    container.insertBefore(emptyCartMessage, nextChild);
 }
 
 function addProductToCartPage(productFromLocalStorage) {
@@ -251,7 +272,7 @@ function validateOrderForm() { //TODO Fonction très longue. Voir pour la refact
             .textContent = "";
     }
 
-    if(!/^[\w.-]*@[\w]*.[a-zA-Z]{2,}$/.test(email)) {
+    if(!/^[\w.-]*@[\w.-]*.[a-zA-Z]{2,}$/.test(email)) {
         document
             .getElementById("emailErrorMsg")
             .textContent = "Veuillez saisir une adresse email valide sans caractères accentués (format : adresse.2_-@exemple.xyz)";
