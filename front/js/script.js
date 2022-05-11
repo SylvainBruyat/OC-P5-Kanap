@@ -10,53 +10,16 @@ fetch("http://localhost:3000/api/products/")
 
 function displayAllProducts(products){
     for (let product of products) {
-        let productCardElements = createProductCardElements(product);
-        let productCard = createProductCard(productCardElements);
-        addProductCardToPage(productCard);
+        document
+            .getElementById("items")
+            .innerHTML += `
+                <a href="./product.html?id=${product._id}">
+                    <article>
+                        <img src="${product.imageUrl}" alt="${product.altTxt}">
+                        <h3 class="productName">${product.name}</h3>
+                        <p class="productDescription">${product.description}</p>
+                    </article>
+                </a>
+            `;
     }
 };
-
-function createProductCardElements(sofa) {
-    let urlParam = sofa._id;
-
-    let content = document.createElement("article");
-    
-    let picture = document.createElement("img");
-    picture.setAttribute("src", sofa.imageUrl);
-    picture.setAttribute("alt", sofa.altTxt);
-
-    let name = document.createElement("h3");
-    name.classList.add("productName");
-    name.textContent = sofa.name;
-    
-    let description = document.createElement("p");
-    description.classList.add("productDescription");
-    description.textContent = sofa.description;
-    
-    return {
-        urlParam,
-        content,
-        picture,
-        name,
-        description
-    };
-}
-
-function createProductCard(productCardElements) {
-    let productCard = document.createElement("a");
-    productCard.setAttribute("href", `./product.html?id=${productCardElements.urlParam}`);
-
-    productCardElements.content.appendChild(productCardElements.picture);
-    productCardElements.content.appendChild(productCardElements.name);
-    productCardElements.content.appendChild(productCardElements.description);
-
-    productCard.appendChild(productCardElements.content);
-
-    return productCard;
-}
-
-function addProductCardToPage(productCard) {
-    document
-        .getElementById("items")
-        .appendChild(productCard);
-}
