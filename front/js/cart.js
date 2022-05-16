@@ -84,7 +84,7 @@ function removeProduct(event) {
     let targetItem = event.target.closest("article");
     CART = CART.filter(p => !((p.id == targetItem.dataset.id) && (p.color == targetItem.dataset.color)));
     localStorage.setItem("cart", JSON.stringify(CART));
-    displayProducts(CART); //Remplacer par un removeChild pour éviter de tout réafficher ?
+    displayProducts(CART); //Remplacer par un removeChild pour éviter de tout réafficher ? Dans ce cas, besoin de mettre à jour prix et quantité totaux à part
 }
 
 function quantityChange(event) {
@@ -124,6 +124,17 @@ SUBMIT_BUTTON.addEventListener("click", function(event) {
 function validateOrderForm() {
     let inputFields = document.querySelectorAll('.cart__order__form input[type="text"], .cart__order__form input[type="email"]');
     let formValidity = true;
+
+    if (CART.length === 0)
+        {
+            let container = document.querySelector(".cart__order__form");
+            let orderErrorMessage = document.createElement("div");
+            orderErrorMessage.setAttribute("style", "margin-top: 20px; text-align: center; color: darkorange;")
+            orderErrorMessage.textContent = "Commande impossible. Votre panier est vide";
+            container.appendChild(orderErrorMessage);
+            return formValidity = false;
+        }
+
     for (let field of inputFields) {
         if (!field.checkValidity()) {
             field.nextElementSibling.textContent = "Ce champ n'est pas valide";
