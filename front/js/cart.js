@@ -1,14 +1,13 @@
-let CART = JSON.parse(localStorage.getItem("cart"));
-let TOTAL_QUANTITY = 0;
+let CART_ITEMS_SECTION = document.getElementById("cart__items");
+let CART = JSON.parse(localStorage.getItem("cart")) ?? [];
 let TOTAL_PRICE = 0;
+let TOTAL_QUANTITY = 0;
 
-if (CART === null || CART.length === 0) {
+if (CART.length === 0) {
     displayEmptyCartMessage();
 }
 else {
-    for (let product of CART) {
-        addProductToCartPage(product);
-    }
+    displayProducts(CART);
 }
 
 function displayEmptyCartMessage() {
@@ -27,301 +26,147 @@ function displayEmptyCartMessage() {
     container.insertBefore(emptyCartMessage, nextChild);
 }
 
-function addProductToCartPage(productFromLocalStorage) {
-    fetch(`http://localhost:3000/api/products/${productFromLocalStorage.id}`)
-    .then(function(response) {
-        if (response.ok)
-            return response.json();
-    })
-    .then(function(productFromAPI) {
-        addProductInfoToCartPage(productFromLocalStorage, productFromAPI);
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        insertEventListeners(); //TODO Est appelé une fois par produit de la page donc crée de multiples event listeners. A corriger.
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        displayTotalQuantityAndPrice(productFromLocalStorage.quantity, productFromAPI.price);
-    })
-    .catch(function() {
-        console.log("Something went wrong with the request to get the product info from the API");
-    });
-    
-}
+async function displayProducts(products) {
+    CART_ITEMS_SECTION.innerHTML = ``;
 
-function addProductInfoToCartPage(productFromLocalStorage, productFromAPI) {
-    let cartItems = document.getElementById("cart__items");
-    cartItems.innerHTML += `
-        <article class="cart__item" data-id="${productFromLocalStorage.id}" data-color="${productFromLocalStorage.color}">
-            <div class="cart__item__img">
-                <img src="${productFromAPI.imageUrl}" alt="${productFromAPI.altTxt}">
-            </div>
-            <div class="cart__item__content">
-                <div class="cart__item__content__description">
-                    <h2>${productFromAPI.name}</h2>
-                    <p>${productFromLocalStorage.color}</p>
-                    <p>${productFromAPI.price} €</p>
-                </div>
-                <div class="cart__item__content__settings">
-                    <div class="cart__item__content__settings__quantity">
-                        <p>Qté : </p>
-                        <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${productFromLocalStorage.quantity}">
+    try {
+        for (let cartProduct of products) {
+            let apiProduct = await fetch(`http://localhost:3000/api/products/${cartProduct.id}`)
+            .then(response => response.json());
+            CART_ITEMS_SECTION.innerHTML += `
+                <article class="cart__item" data-id="${cartProduct.id}" data-color="${cartProduct.color}">
+                    <div class="cart__item__img">
+                        <img src="${apiProduct.imageUrl}" alt="${apiProduct.altTxt}">
                     </div>
-                    <div class="cart__item__content__settings__delete">
-                        <p class="deleteItem">Supprimer</p>
+                    <div class="cart__item__content">
+                        <div class="cart__item__content__description">
+                            <h2>${apiProduct.name}</h2>
+                            <p>${cartProduct.color}</p>
+                            <p>${apiProduct.price} €</p>
+                        </div>
+                        <div class="cart__item__content__settings">
+                            <div class="cart__item__content__settings__quantity">
+                                <p>Qté : </p>
+                                <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${cartProduct.quantity}">
+                            </div>
+                            <div class="cart__item__content__settings__delete">
+                                <p class="deleteItem">Supprimer</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </article>
-    `;
+                </article>
+            `;
+            displayTotalPriceAndQuantity(apiProduct.price, cartProduct.quantity);
+        }
+
+        let deleteButtons = document.getElementsByClassName("deleteItem");
+        for (let button of deleteButtons) {
+            button.addEventListener("click", removeProduct);
+        }
+        let quantityInputs = document.getElementsByClassName("itemQuantity");
+        for (let input of quantityInputs) {
+            input.addEventListener("change", quantityChange);
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
 }
 
-function insertEventListeners() {
-    let quantityFields = document.getElementsByClassName("itemQuantity");
-    let deleteButtons = document.getElementsByClassName("deleteItem");
-    let submitButton = document.getElementById("order");
-    
-    for (let field of quantityFields) {
-        field.addEventListener("change", function(event) {
-            event.stopImmediatePropagation(); //TODO Vérifier si toujours utile après que le problème de création d'event listener est corrigé
-            productQuantityUpdate(event.target);            
-        });
-    }
-
-    for (let button of deleteButtons) {
-        button.addEventListener("click", function(event) {
-            event.stopImmediatePropagation(); //TODO Vérifier si toujours utile après que le problème de création d'event listener est corrigé
-            removeProductFromBasket(event.target);
-        })
-    }
-
-    submitButton.addEventListener("click", function(event) {
-        event.stopImmediatePropagation(); //TODO Vérifier si toujours utile après que le problème de création d'event listener est corrigé
-        event.preventDefault();
-        sendOrder();
-    });
-}
-
-function displayTotalQuantityAndPrice(quantity, price) {
-    TOTAL_QUANTITY += Number.parseInt(quantity, 10);
+function displayTotalPriceAndQuantity(price, quantity) {
     TOTAL_PRICE += (price * quantity);
-    document
-        .getElementById("totalQuantity")
-        .textContent = TOTAL_QUANTITY;
-    document
-        .getElementById("totalPrice")
-        .textContent = TOTAL_PRICE;
+    TOTAL_QUANTITY += Number.parseInt(quantity, 10);
+    document.getElementById("totalPrice").textContent = TOTAL_PRICE;
+    document.getElementById("totalQuantity").textContent = TOTAL_QUANTITY;
 }
 
-function productQuantityUpdate(modifiedQuantityField) {
-    let status = validateNewQuantity(modifiedQuantityField);
-    if (status.isQuantityValid === false) {
-        rejectNewQuantity(modifiedQuantityField);
-    }
-    else if (status.isQuantityInRange === false) {
-        //TODO Afficher message d'information dans le DOM sur la quantité ramenée entre 1 et 100;
-        let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
-        let deltaQuantity = quantityUpdate(modifiedProduct, modifiedQuantityField.value);
-        let productPrice = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
-        displayTotalQuantityAndPrice(deltaQuantity, productPrice);
-    }
-    else { //TODO Code répété avec le else if. A refactoriser
-        let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
-        let deltaQuantity = quantityUpdate(modifiedProduct, modifiedQuantityField.value);
-        let productPrice = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
-        displayTotalQuantityAndPrice(deltaQuantity, productPrice);
-    }
+function removeProduct(event) {
+    let targetItem = event.target.closest("article");
+    CART = CART.filter(p => !((p.id == targetItem.dataset.id) && (p.color == targetItem.dataset.color)));
+    localStorage.setItem("cart", JSON.stringify(CART));
+    displayProducts(CART); //Remplacer par un removeChild pour éviter de tout réafficher ?
 }
 
-function validateNewQuantity(modifiedQuantityField) {
-    if (!/^[0-9]+$/.test(modifiedQuantityField.value)) {
-        return {
-            isQuantityValid: false,
-            isQuantityInRange: false
+function quantityChange(event) {
+    let targetItem = event.target.closest("article");
+    for (let product of CART) {
+        if (product.id == targetItem.dataset.id && product.color == targetItem.dataset.color) {
+            let deltaQuantity = event.target.value - product.quantity;
+            product.quantity = event.target.value;
+            let productPrice = parseInt(targetItem.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
+            displayTotalPriceAndQuantity(productPrice, deltaQuantity);
         }
     }
-    else if ((modifiedQuantityField.value < 1) || (modifiedQuantityField.value > 100)) {
-        modifiedQuantityField.value = Math.max(1, Math.min(100, modifiedQuantityField.value));
-        return {
-            isQuantityValid: true,
-            isQuantityInRange: false
-        }
-    }
-    else {
-        return {
-            isQuantityValid: true,
-            isQuantityInRange: true
-        }
-    }
+    localStorage.setItem("cart", JSON.stringify(CART));
 }
 
-function rejectNewQuantity(modifiedQuantityField) {
-    let modifiedProduct = findCorrespondingProduct(modifiedQuantityField);
-    let productInCart = CART.find(p => (p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color));
-    modifiedQuantityField.value = productInCart.quantity;
-    //TODO Ajouter un message d'erreur dans le DOM
-}
+document.getElementById("firstName").setAttribute("pattern", "[\\p{L}]{1}[\\p{L} -]+");
+document.getElementById("firstName").setAttribute("title", "Caractères autorisés : lettres, espaces et tirets");
+document.getElementById("lastName").setAttribute("pattern", "[\\p{L}]{1}[\\p{L}' -]+");
+document.getElementById("lastName").setAttribute("title", "Caractères autorisés : lettres, espaces, apostrophes et tirets");
+document.getElementById("address").setAttribute("pattern", "[\\p{L}\\d]{1}[\\p{L}\\d' ,.-]+");
+document.getElementById("address").setAttribute("title", "Caractères autorisés : chiffres, lettres, espaces, apostrophes, virgules, points et tirets");
+document.getElementById("city").setAttribute("pattern", "[\\p{L}]{1}[\\p{L}' -]+");
+document.getElementById("city").setAttribute("title", "Caractères autorisés : lettres, espaces, apostrophes et tirets");
+document.getElementById("email").setAttribute("pattern", "[\\w.-]*@[\\w.-]*.[a-zA-Z]{2,}");
+document.getElementById("email").setAttribute("title", "Format attendu : adresse email valide sans caractères accentués (ex. : adresse_mail.2@exemple.xyz)");
 
-function findCorrespondingProduct(clickedElement) {
-    return modifiedProduct = clickedElement.closest("article");
-}
-
-function quantityUpdate(modifiedProduct, newQuantity) {
-    let productInCart = CART.find(p => (p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color));
-    let deltaQuantity = newQuantity - productInCart.quantity;
-    productInCart.quantity = newQuantity;
-    saveCart(CART);
-    return deltaQuantity;
-}
-
-function removeProductFromBasket(clickedButton) {
-    let modifiedProduct = findCorrespondingProduct(clickedButton);
-    let removedQuantityAndPrice = findRemovedQuantityAndPrice(modifiedProduct);
-    deleteProduct(modifiedProduct);
-    displayTotalQuantityAndPrice(removedQuantityAndPrice.quantity, removedQuantityAndPrice.price);
-}
-
-function findRemovedQuantityAndPrice(modifiedProduct) {
-    let quantity = -(modifiedProduct.querySelector(".itemQuantity").value);
-    let price = parseInt(modifiedProduct.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
-    return {
-        quantity,
-        price
-    }
-}
-
-function deleteProduct(modifiedProduct) {
-    CART = CART.filter(p => !((p.id == modifiedProduct.dataset.id) && (p.color == modifiedProduct.dataset.color)));
-    saveCart(CART);
-    removePageContent(modifiedProduct);
-}
-
-function removePageContent(modifiedProduct) {
-    let productContainer = modifiedProduct.closest("section");
-    productContainer.removeChild(modifiedProduct);
-}
-
-function saveCart(cart) {
-    localStorage.setItem("cart", JSON.stringify(cart));
-}
-
-function sendOrder() {
-    let isFormValid = validateOrderForm();
-    if (isFormValid) {
-        let requestBody = createOrderData(CART);
+let SUBMIT_BUTTON = document.getElementById("order");
+SUBMIT_BUTTON.addEventListener("click", function(event) {
+    event.preventDefault();
+    let formIsValid = validateOrderForm();
+    if (formIsValid) {
+        let requestBody = assembleOrderData(CART);
         postOrderRequest(requestBody);
     }
-    
+});
+
+function validateOrderForm() {
+    let inputFields = document.querySelectorAll('.cart__order__form input[type="text"], .cart__order__form input[type="email"]');
+    let formValidity = true;
+    for (let field of inputFields) {
+        if (!field.checkValidity()) {
+            field.nextElementSibling.textContent = "Ce champ n'est pas valide";
+            formValidity &= false;
+        }
+        else {
+            field.nextElementSibling.textContent = "";
+        }
+    }
+    return formValidity;
 }
 
-function validateOrderForm() { //TODO Fonction très longue. Voir pour la refactoriser
+function assembleOrderData(cart) {
     let firstName = document.getElementById("firstName").value;
     let lastName = document.getElementById("lastName").value;
     let address = document.getElementById("address").value;
     let city = document.getElementById("city").value;
     let email = document.getElementById("email").value;
 
-    let firstNameIsValid = true;
-    let lastNameIsValid = true;
-    let addressIsValid = true;
-    let cityIsValid = true;
-    let emailIsValid = true;
-
-    if(!/^[\p{L}]{1}[\p{L} -]+$/u.test(firstName)) {
-        document
-            .getElementById("firstNameErrorMsg")
-            .textContent = "Veuillez saisir un prénom commençant par une lettre et uniquement composé de lettres, espaces et tirets";
-        firstNameIsValid = false;
-    }
-    else {
-        document
-            .getElementById("firstNameErrorMsg")
-            .textContent = "";
-    }
-
-    if(!/^[\p{L}]{1}[\p{L} -]+$/u.test(lastName)) {
-        document
-            .getElementById("lastNameErrorMsg")
-            .textContent = "Veuillez saisir un nom de famille commençant par une lettre et uniquement composé de lettres, espaces et tirets";
-        lastNameIsValid = false;
-    }
-    else {
-        document
-            .getElementById("lastNameErrorMsg")
-            .textContent = "";
-    }
-
-    if(!/^[\p{L}\d]{1}[\p{L}\d ,.-]+$/u.test(address)) {
-        document
-            .getElementById("addressErrorMsg")
-            .textContent = "Veuillez saisir une adresse commençant par un chiffre ou une lettre et uniquement composée de chiffres, lettres, espaces, virgules, points et tirets";
-        addressIsValid = false;
-    }
-    else {
-        document
-            .getElementById("addressErrorMsg")
-            .textContent = "";
-    }
-
-    if(!/^[\p{L}]{1}[\p{L} -]+$/u.test(city)) {
-        document
-            .getElementById("cityErrorMsg")
-            .textContent = "Veuillez saisir un nom de ville commençant par une lettre et uniquement composé de lettres, espaces et tirets";
-        cityIsValid = false;
-    }
-    else {
-        document
-            .getElementById("cityErrorMsg")
-            .textContent = "";
-    }
-
-    if(!/^[\w.-]*@[\w.-]*.[a-zA-Z]{2,}$/.test(email)) {
-        document
-            .getElementById("emailErrorMsg")
-            .textContent = "Veuillez saisir une adresse email valide sans caractères accentués (format : adresse.2_-@exemple.xyz)";
-        emailIsValid = false;
-    }
-    else {
-        document
-            .getElementById("emailErrorMsg")
-            .textContent = "";
-    }
-    return (firstNameIsValid && lastNameIsValid && addressIsValid && cityIsValid && emailIsValid);
-}
-
-function createOrderData(cart) {
-    let firstName = document.getElementById("firstName").value;
-    let lastName = document.getElementById("lastName").value;
-    let address = document.getElementById("address").value;
-    let city = document.getElementById("city").value;
-    let email = document.getElementById("email").value;
-    let contact = {
-        "firstName": firstName,
-        "lastName": lastName,
-        "address": address,
-        "city": city,
-        "email": email
-    }
-
-    let products = []; //Mieux d'utiliser une méthode .map() ?
-    for (let product of cart) {
-        products.push(product.id);
-    }
+    let contact = {firstName, lastName, address, city, email}
+    let products = cart.map(p => p.id);
 
     return {contact, products};
 }
 
 function postOrderRequest(requestBody) {
-    fetch("http://localhost:3000/api/products/order/", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(requestBody),
-    })
-    .then(function(response) {
-        if (response.status == 201)
-            return response.json();
-    })
-    .then(function(data) {
-        window.location = `./confirmation.html?orderid=${data.orderId}`;
-    })
-    .catch(function() {
-        console.log("The order could not be processed by the API. Please verify the content of the POST request");
-    });
+    try {
+        fetch("http://localhost:3000/api/products/order/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(requestBody),
+        })
+        .then(function(response) {
+            if (response.status == 201)
+                return response.json();
+            else
+                throw "The order could not be processed by the API. Please verify the content of the POST request"
+        })
+        .then(function(data) {
+            window.location = `./confirmation.html?orderid=${data.orderId}`;
+        })
+    }
+    catch (error) {
+        console.log(error);
+    }
 }
