@@ -4,10 +4,12 @@ fetch(`http://localhost:3000/api/products/${PRODUCT_ID}`)
     .then(function(response) {
         if (response.ok)
             return response.json();
+        else
+            throw "Something went wrong with the request to get the product info from the API";
     })
     .then(addProductInfoToPage)
-    .catch(function() {
-        console.log("Something went wrong with the request to get the product info from the API");
+    .catch(function(error) {
+        console.log(error);
     });
 
 function addProductInfoToPage(sofa) {
@@ -82,7 +84,7 @@ function displayWarningMessage(messageToDisplay) {
     quantityWarningMessage.textContent = messageToDisplay;
     setTimeout(function() {
         removeWarningMessage();
-    }, 5000);
+    }, 8000);
 }
 
 function removeWarningMessage() {
@@ -131,7 +133,7 @@ function displayErrorMessage(messageToDisplay) {
     setTimeout(function() {
         container.removeChild(errorMessage);
     },
-    5000);
+    8000);
 }
 
 function addProductToCart(product) {
@@ -195,5 +197,5 @@ function displayConfirmationMessage(messageToDisplay) {
     setTimeout(function() {
         container.removeChild(confirmationMessage);
     },
-    5000);
+    8000);
 }
