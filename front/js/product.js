@@ -9,6 +9,12 @@ fetch(`http://localhost:3000/api/products/${PRODUCT_ID}`)
     })
     .then(addProductInfoToPage)
     .catch(function(error) {
+        let container = document.querySelector("main div");
+        let nextChild = container.querySelector("section");
+        let errorMessage = document.createElement("div");
+        errorMessage.setAttribute("style", "margin-top: 20px; text-align: center; font-size: 24px");
+        errorMessage.innerHTML = "Oups ! Nous ne pouvons pas afficher votre produit pour l’instant.<br>Revenez bientôt !";
+        container.insertBefore(errorMessage, nextChild);
         console.log(error);
     });
 
