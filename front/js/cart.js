@@ -28,6 +28,9 @@ function displayEmptyCartMessage() {
 
 async function displayProducts(products) {
     CART_ITEMS_SECTION.innerHTML = ``;
+    TOTAL_PRICE = 0;
+    TOTAL_QUANTITY = 0;
+    displayTotalPriceAndQuantity(TOTAL_PRICE, TOTAL_QUANTITY);
 
     try {
         for (let cartProduct of products) {
@@ -89,6 +92,14 @@ function removeProduct(event) {
 
 function quantityChange(event) {
     let targetItem = event.target.closest("article");
+
+    if (!/^[0-9]+$/.test(event.target.value)) {
+        let productInCart = CART.find(p => (p.id == targetItem.dataset.id) && (p.color == targetItem.dataset.color));
+        event.target.value = productInCart.quantity;
+    }
+    else if ((event.target.value < 1) || (event.target.value > 100))
+        event.target.value = Math.max(1, Math.min(100, event.target.value));
+
     for (let product of CART) {
         if (product.id == targetItem.dataset.id && product.color == targetItem.dataset.color) {
             let deltaQuantity = event.target.value - product.quantity;
@@ -171,7 +182,7 @@ function postOrderRequest(requestBody) {
             if (response.status == 201)
                 return response.json();
             else
-                throw "The order could not be processed by the API. Please verify the content of the POST request"
+                throw "The order could not be processed by the API. Please verify the content of the POST request";
         })
         .then(function(data) {
             window.location = `./confirmation.html?orderid=${data.orderId}`;
