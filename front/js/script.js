@@ -1,15 +1,22 @@
-fetch("http://localhost:3000/api/products/")
+fetch("http://localhost:3000/api/product/")
     .then(function(response) {
         if (response.ok)
             return response.json();
+        else
+            throw "Something went wrong with the request to get all the products from the API";
     })
     .then(displayAllProducts)
-    .catch(function() { // Voir pour remplacer par console.log(error), vérifier quel message est renvoyé par l'API
-        console.log("Something went wrong with the request to get all the products from the API");
+    .catch(function(error) {
+        let container = document.getElementById("items");
+        let errorMessage = document.createElement("div");
+        errorMessage.setAttribute("style", "text-align: center; font-size: 24px");
+        errorMessage.textContent = "Notre site est momentanément indisponible. Revenez bientôt !";
+        container.appendChild(errorMessage);
+        console.log(error);
     });
 
 function displayAllProducts(products){
-    let items = document.getElementById("items")
+    let items = document.getElementById("items");
     for (let product of products) {
         items.innerHTML += `
             <a href="./product.html?id=${product._id}">
