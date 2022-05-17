@@ -1,4 +1,4 @@
-fetch("http://localhost:3000/api/product/")
+fetch("http://localhost:3000/api/products/")
     .then(function(response) {
         if (response.ok)
             return response.json();
