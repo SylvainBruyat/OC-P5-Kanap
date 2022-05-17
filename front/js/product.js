@@ -2,13 +2,10 @@ const PRODUCT_ID = new URL(document.URL).searchParams.get("id");
 
 fetch(`http://localhost:3000/api/products/${PRODUCT_ID}`)
     .then(function(response) {
-        if (response.ok) {
+        if (response.ok)
             return response.json();
-        }
     })
-    .then(function(value) {
-        addProductInfoToPage(value);
-    })
+    .then(addProductInfoToPage)
     .catch(function() {
         console.log("Something went wrong with the request to get the product info from the API");
     });
@@ -60,12 +57,14 @@ function addProductColorsToPage(colors) {
     }
 }
 
+//TODO A intégrer dans une fonction
 let quantityWarningMessage = document.createElement("div");
 quantityWarningMessage.setAttribute("style", "color: darkorange;");
 document
         .querySelector("div.item__content__settings__quantity")
         .appendChild(quantityWarningMessage);
 
+//TODO A intégrer dans une fonction
 let quantity = document.getElementById("quantity");
 quantity.addEventListener("change", function(event) {
     if (!/^-?[0-9]+$/.test(event.target.value)) { //Modifier pour rejeter directement les entrées utilisateur invalides
@@ -90,6 +89,7 @@ function removeWarningMessage() {
     quantityWarningMessage.textContent = "";
 }
 
+//TODO A intégrer dans une fonction
 let addToCartButton = document.getElementById("addToCart");
 addToCartButton.addEventListener("click", function(){
     let productInfo = readFormInfo();
@@ -97,7 +97,6 @@ addToCartButton.addEventListener("click", function(){
     if (formIsValid) {
         let cart = addProductToCart(productInfo);
         saveCart(cart);
-        displayConfirmationMessage(`Le canapé a été ajouté à votre panier en ${productInfo.quantity} exemplaire(s) couleur ${productInfo.color}.`);
     }
 });
 
@@ -126,7 +125,7 @@ function validateProductForm(product) {
 function displayErrorMessage(messageToDisplay) {
     let container = document.querySelector(".item__content");
     let errorMessage = document.createElement("div");
-    errorMessage.setAttribute("style", "margin-top: 15px; text-align: center; color: rgb(150, 0, 0);");
+    errorMessage.setAttribute("style", "margin-top: 15px; text-align: center; color: darkorange;");
     errorMessage.textContent = messageToDisplay;
     container.appendChild(errorMessage);
     setTimeout(function() {
@@ -143,6 +142,7 @@ function addProductToCart(product) {
     }
     else {
         cart.push(product);
+        displayConfirmationMessage(`Le canapé couleur ${product.color} a été ajouté à votre panier en ${product.quantity} exemplaire(s).`);
     }
     
     return cart;
@@ -167,12 +167,16 @@ function checkIfProductIsAlreadyInCart(product, cart) {
     return false;
 }
 
-function updateProductQuantity(product, cart) {
-    for (let item of cart) {
-        if (item.id === product.id && item.color === product.color) { /*** Code répété ! A refactoriser/améliorer ***/
-            let sum = Math.min(100, parseInt(item.quantity, 10) + parseInt(product.quantity, 10));
-            displayWarningMessage("La quantité totale de ce produit dans le panier a été limitée à 100.")
-            item.quantity = sum.toString();
+function updateProductQuantity(updatedProduct, cart) {
+    for (let cartItem of cart) {
+        if (cartItem.id === updatedProduct.id && cartItem.color === updatedProduct.color) { /*** Code répété ! A refactoriser/améliorer ***/
+            let sum = Math.min(100, parseInt(cartItem.quantity, 10) + parseInt(updatedProduct.quantity, 10));
+            let addedQuantity = Math.min(updatedProduct.quantity, 100-cartItem.quantity);
+            if (addedQuantity != updatedProduct.quantity) {
+                displayWarningMessage("La quantité totale de ce produit dans le panier a été limitée à 100.")
+            }
+            displayConfirmationMessage(`Le canapé couleur ${updatedProduct.color} a été ajouté à votre panier en ${addedQuantity} exemplaire(s).`);
+            cartItem.quantity = sum.toString();
             return cart;
         }
     }
