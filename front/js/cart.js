@@ -87,7 +87,7 @@ function removeProduct(event) {
     let targetItem = event.target.closest("article");
     CART = CART.filter(p => !((p.id == targetItem.dataset.id) && (p.color == targetItem.dataset.color)));
     localStorage.setItem("cart", JSON.stringify(CART));
-    displayProducts(CART); //Remplacer par un removeChild pour éviter de tout réafficher ? Dans ce cas, besoin de mettre à jour prix et quantité totaux à part
+    displayProducts(CART);
 }
 
 function quantityChange(event) {

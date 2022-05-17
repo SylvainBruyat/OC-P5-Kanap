@@ -65,17 +65,15 @@ function addProductColorsToPage(colors) {
     }
 }
 
-//TODO A intégrer dans une fonction
 let quantityWarningMessage = document.createElement("div");
 quantityWarningMessage.setAttribute("style", "color: darkorange;");
 document
         .querySelector("div.item__content__settings__quantity")
         .appendChild(quantityWarningMessage);
 
-//TODO A intégrer dans une fonction
 let quantity = document.getElementById("quantity");
 quantity.addEventListener("change", function(event) {
-    if (!/^-?[0-9]+$/.test(event.target.value)) { //Modifier pour rejeter directement les entrées utilisateur invalides
+    if (!/^-?[0-9]+$/.test(event.target.value)) {
         displayWarningMessage("Veuillez entrer un nombre entier");
     }
     else if ((event.target.value < 1) || (event.target.value > 100)) {
@@ -97,7 +95,6 @@ function removeWarningMessage() {
     quantityWarningMessage.textContent = "";
 }
 
-//TODO A intégrer dans une fonction
 let addToCartButton = document.getElementById("addToCart");
 addToCartButton.addEventListener("click", function(){
     let productInfo = readFormInfo();
@@ -177,7 +174,7 @@ function checkIfProductIsAlreadyInCart(product, cart) {
 
 function updateProductQuantity(updatedProduct, cart) {
     for (let cartItem of cart) {
-        if (cartItem.id === updatedProduct.id && cartItem.color === updatedProduct.color) { /*** Code répété ! A refactoriser/améliorer ***/
+        if (cartItem.id === updatedProduct.id && cartItem.color === updatedProduct.color) {
             let sum = Math.min(100, parseInt(cartItem.quantity, 10) + parseInt(updatedProduct.quantity, 10));
             let addedQuantity = Math.min(updatedProduct.quantity, 100-cartItem.quantity);
             if (addedQuantity != updatedProduct.quantity) {
