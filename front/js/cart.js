@@ -185,6 +185,7 @@ function postOrderRequest(requestBody) {
                 throw "The order could not be processed by the API. Please verify the content of the POST request";
         })
         .then(function(data) {
+            localStorage.removeItem("cart");
             window.location = `./confirmation.html?orderid=${data.orderId}`;
         })
     }
