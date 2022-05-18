@@ -111,17 +111,6 @@ function quantityChange(event) {
     localStorage.setItem("cart", JSON.stringify(CART));
 }
 
-document.getElementById("firstName").setAttribute("pattern", "[\\p{L}]{1}[\\p{L} -]+");
-document.getElementById("firstName").setAttribute("title", "Caractères autorisés : lettres, espaces et tirets");
-document.getElementById("lastName").setAttribute("pattern", "[\\p{L}]{1}[\\p{L}' -]+");
-document.getElementById("lastName").setAttribute("title", "Caractères autorisés : lettres, espaces, apostrophes et tirets");
-document.getElementById("address").setAttribute("pattern", "[\\p{L}\\d]{1}[\\p{L}\\d' ,.-]+");
-document.getElementById("address").setAttribute("title", "Caractères autorisés : chiffres, lettres, espaces, apostrophes, virgules, points et tirets");
-document.getElementById("city").setAttribute("pattern", "[\\p{L}]{1}[\\p{L}' -]+");
-document.getElementById("city").setAttribute("title", "Caractères autorisés : lettres, espaces, apostrophes et tirets");
-document.getElementById("email").setAttribute("pattern", "[\\w.-]*@[\\w.-]*.[a-zA-Z]{2,}");
-document.getElementById("email").setAttribute("title", "Format attendu : adresse email valide sans caractères accentués (ex. : adresse_mail.2@exemple.xyz)");
-
 let SUBMIT_BUTTON = document.getElementById("order");
 SUBMIT_BUTTON.addEventListener("click", function(event) {
     event.preventDefault();
@@ -133,28 +122,73 @@ SUBMIT_BUTTON.addEventListener("click", function(event) {
 });
 
 function validateOrderForm() {
-    let inputFields = document.querySelectorAll('.cart__order__form input[type="text"], .cart__order__form input[type="email"]');
     let formValidity = true;
 
-    if (CART.length === 0)
-        {
-            let container = document.querySelector(".cart__order__form");
-            let orderErrorMessage = document.createElement("div");
-            orderErrorMessage.setAttribute("style", "margin-top: 20px; text-align: center; color: darkorange;")
-            orderErrorMessage.textContent = "Commande impossible. Votre panier est vide";
-            container.appendChild(orderErrorMessage);
-            return formValidity = false;
-        }
-
-    for (let field of inputFields) {
-        if (!field.checkValidity()) {
-            field.nextElementSibling.textContent = "Ce champ n'est pas valide";
-            formValidity &= false;
-        }
-        else {
-            field.nextElementSibling.textContent = "";
-        }
+    if (CART.length === 0) {
+        let container = document.querySelector(".cart__order__form");
+        let orderErrorMessage = document.createElement("div");
+        orderErrorMessage.setAttribute("style", "margin-top: 20px; text-align: center; color: darkorange;")
+        orderErrorMessage.textContent = "Commande impossible. Votre panier est vide";
+        container.appendChild(orderErrorMessage);
+        return formValidity = false;
     }
+
+    let firstName = document.getElementById("firstName").value;
+    let lastName = document.getElementById("lastName").value;
+    let address = document.getElementById("address").value;
+    let city = document.getElementById("city").value;
+    let email = document.getElementById("email").value;
+
+    if(!/^[\p{L}]{1}[\p{L} -]+$/u.test(firstName)) {
+        document
+            .getElementById("firstNameErrorMsg")
+            .textContent = "Veuillez saisir un prénom commençant par une lettre et uniquement composé de lettres, espaces et tirets";
+        formValidity = false;
+    }
+    else {
+        document.getElementById("firstNameErrorMsg").textContent = "";
+    }
+
+    if(!/^[\p{L}]{1}[\p{L}' -]+$/u.test(lastName)) {
+        document
+            .getElementById("lastNameErrorMsg")
+            .textContent = "Veuillez saisir un nom de famille commençant par une lettre et uniquement composé de lettres, espaces, apostrophes et tirets";
+        formValidity = false;
+    }
+    else {
+        document.getElementById("lastNameErrorMsg").textContent = "";
+    }
+
+    if(!/^[\p{L}\d]{1}[\p{L}\d' ,.-]+$/u.test(address)) {
+        document
+            .getElementById("addressErrorMsg")
+            .textContent = "Veuillez saisir une adresse commençant par un chiffre ou une lettre et uniquement composée de chiffres, lettres, espaces, apostrophes, virgules, points et tirets";
+        formValidity = false;
+    }
+    else {
+        document.getElementById("addressErrorMsg").textContent = "";
+    }
+
+    if(!/^[\p{L}]{1}[\p{L}' -]+$/u.test(city)) {
+        document
+            .getElementById("cityErrorMsg")
+            .textContent = "Veuillez saisir un nom de ville commençant par une lettre et uniquement composé de lettres, espaces, apostrophes et tirets";
+        formValidity = false;
+    }
+    else {
+        document.getElementById("cityErrorMsg").textContent = "";
+    }
+
+    if(!/^[\w.-]*@[\w.-]*.[a-zA-Z]{2,}$/.test(email)) {
+        document
+            .getElementById("emailErrorMsg")
+            .textContent = "Veuillez saisir une adresse email valide sans caractères accentués (ex. : adresse_mail.2@exemple.xyz)";
+        formValidity = false;
+    }
+    else {
+        document.getElementById("emailErrorMsg").textContent = "";
+    }
+
     return formValidity;
 }
 
