@@ -18,6 +18,7 @@ fetch(`http://localhost:3000/api/products/${PRODUCT_ID}`)
         console.log(error);
     });
 
+// L'argument "sofa" est un objet renvoyé par l'API qui contient les infos d'un produit
 function addProductInfoToPage(sofa) {
     addProductImageToPage(sofa.imageUrl, sofa.altTxt);
     addProductNameToPage(sofa.name);
@@ -65,6 +66,7 @@ function addProductColorsToPage(colors) {
     }
 }
 
+// Création d'une <div> sous l'<input> de quantité pour y mettre les messages d'erreur
 let quantityWarningMessage = document.createElement("div");
 quantityWarningMessage.setAttribute("style", "color: darkorange;");
 document
@@ -73,7 +75,7 @@ document
 
 let quantity = document.getElementById("quantity");
 quantity.addEventListener("change", function(event) {
-    if (!/^-?[0-9]+$/.test(event.target.value)) {
+    if (!/^-?[0-9]+$/.test(event.target.value)) { // Cet RegExp n'accepte que les nombres entiers, éventuellement précédés d'un signe moins
         displayWarningMessage("Veuillez entrer un nombre entier");
     }
     else if ((event.target.value < 1) || (event.target.value > 100)) {
@@ -84,6 +86,7 @@ quantity.addEventListener("change", function(event) {
     }
 });
 
+// Fonction d'affichage des messages d'erreur dans la <div> créée sous l'<input> de quantité
 function displayWarningMessage(messageToDisplay) {
     quantityWarningMessage.textContent = messageToDisplay;
     setTimeout(function() {
@@ -105,6 +108,7 @@ addToCartButton.addEventListener("click", function(){
     }
 });
 
+// Fonction qui récupère les infos depuis la page produit et crée un objet prêt à être sauvegardé dans le panier du localStorage
 function readFormInfo() {
     let id = PRODUCT_ID;
     let color = document.getElementById("colors").value;
@@ -127,6 +131,7 @@ function validateProductForm(product) {
     }
 }
 
+// Fonction qui affiche un message d'erreur sous le bouton "Ajouter au panier".
 function displayErrorMessage(messageToDisplay) {
     let container = document.querySelector(".item__content");
     let errorMessage = document.createElement("div");
@@ -175,9 +180,9 @@ function checkIfProductIsAlreadyInCart(product, cart) {
 function updateProductQuantity(updatedProduct, cart) {
     for (let cartItem of cart) {
         if (cartItem.id === updatedProduct.id && cartItem.color === updatedProduct.color) {
-            let sum = Math.min(100, parseInt(cartItem.quantity, 10) + parseInt(updatedProduct.quantity, 10));
+            let sum = Math.min(100, parseInt(cartItem.quantity, 10) + parseInt(updatedProduct.quantity, 10)); //Limitation de la quantité totale par produit à 100
             let addedQuantity = Math.min(updatedProduct.quantity, 100-cartItem.quantity);
-            if (addedQuantity != updatedProduct.quantity) {
+            if (addedQuantity != updatedProduct.quantity) { //Message d'info si la quantité ajoutée est différente de la quantité saisie par l'utilisateur
                 displayWarningMessage("La quantité totale de ce produit dans le panier a été limitée à 100.")
             }
             displayConfirmationMessage(`Le canapé couleur ${updatedProduct.color} a été ajouté à votre panier en ${addedQuantity} exemplaire(s).`);
@@ -191,6 +196,7 @@ function saveCart(cart) {
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 
+// Fonction qui affiche le message de confirmation d'ajout dans le panier sous le bouton "Ajouter au panier"
 function displayConfirmationMessage(messageToDisplay) {
     let container = document.querySelector(".item__content");
     let confirmationMessage = document.createElement("div");

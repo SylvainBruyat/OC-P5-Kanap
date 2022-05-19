@@ -1,5 +1,5 @@
 let CART_ITEMS_SECTION = document.getElementById("cart__items");
-let CART = JSON.parse(localStorage.getItem("cart")) ?? [];
+let CART = JSON.parse(localStorage.getItem("cart")) ?? []; // Permet de créer un tableau vide si le panier n'existe pas dans le localStorage
 let TOTAL_PRICE = 0;
 let TOTAL_QUANTITY = 0;
 
@@ -28,6 +28,8 @@ function displayEmptyCartMessage() {
 
 async function displayProducts(products) {
     CART_ITEMS_SECTION.innerHTML = ``;
+
+    // Remise à zéro des totaux de prix et quantité. Permet d'avoir des totaux corrects si le panier est vide après suppression du dernier produit
     TOTAL_PRICE = 0;
     TOTAL_QUANTITY = 0;
     displayTotalPriceAndQuantity(TOTAL_PRICE, TOTAL_QUANTITY);
@@ -87,16 +89,19 @@ function removeProduct(event) {
     let targetItem = event.target.closest("article");
     CART = CART.filter(p => !((p.id == targetItem.dataset.id) && (p.color == targetItem.dataset.color)));
     localStorage.setItem("cart", JSON.stringify(CART));
-    displayProducts(CART);
+    displayProducts(CART); //Permet de réafficher les produits restants dans le panier et de recalculer les prix et quantité totaux
 }
 
 function quantityChange(event) {
     let targetItem = event.target.closest("article");
 
+    // Si la quantité saisie par l'utilisateur n'est pas un entier supérieur ou égal à 0, remet la quantité précédente
     if (!/^[0-9]+$/.test(event.target.value)) {
         let productInCart = CART.find(p => (p.id == targetItem.dataset.id) && (p.color == targetItem.dataset.color));
         event.target.value = productInCart.quantity;
     }
+
+    // Ramène la quantité à 1 si l'utilisateur a saisi 0. Ramène à 100 si l'utilisateur a saisi un nombre > 100.
     else if ((event.target.value < 1) || (event.target.value > 100))
         event.target.value = Math.max(1, Math.min(100, event.target.value));
 
@@ -104,6 +109,7 @@ function quantityChange(event) {
         if (product.id == targetItem.dataset.id && product.color == targetItem.dataset.color) {
             let deltaQuantity = event.target.value - product.quantity;
             product.quantity = event.target.value;
+            //Récupère le prix du produit affiché sur la page car il n'est pas disponible dans l'objet "product" venant du localStorage
             let productPrice = parseInt(targetItem.querySelector(".cart__item__content__description p:nth-of-type(2)").textContent, 10);
             displayTotalPriceAndQuantity(productPrice, deltaQuantity);
         }
@@ -210,7 +216,7 @@ function postOrderRequest(requestBody) {
         fetch("http://localhost:3000/api/products/order/", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(requestBody),
+            body: JSON.stringify(requestBody)
         })
         .then(function(response) {
             if (response.status == 201)
